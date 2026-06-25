@@ -14,3 +14,6 @@ dist
 .DS_Store
 *.local
 .wrangler
+
+# editor / agent config
+.claude/
