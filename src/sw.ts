@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
+import {
+  precacheAndRoute,
+  cleanupOutdatedCaches,
+  createHandlerBoundToURL,
+} from "workbox-precaching";
 import { clientsClaim } from "workbox-core";
-import { registerRoute, NavigationRoute, createHandlerBoundToURL } from "workbox-routing";
+import { registerRoute, NavigationRoute } from "workbox-routing";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -33,18 +37,23 @@ self.addEventListener("push", (event) => {
     payload = { title: "BOVYN", body: event.data.text() };
   }
 
-  event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      tag: payload.tag ?? "bovyn-signal",
-      icon: payload.icon ?? "/icons/icon.svg",
-      badge: payload.badge ?? "/icons/icon.svg",
-      data: payload.data ?? {},
-      actions: payload.actions ?? [],
-      vibrate: [200, 100, 200],
-      requireInteraction: true,
-    })
-  );
+  // actions and vibrate are supported by ServiceWorkerRegistration.showNotification
+  // at runtime but are not in the conservative lib.dom NotificationOptions type.
+  const options: NotificationOptions & {
+    actions?: Array<{ action: string; title: string }>;
+    vibrate?: number[];
+  } = {
+    body: payload.body,
+    tag: payload.tag ?? "bovyn-signal",
+    icon: payload.icon ?? "/icons/icon.svg",
+    badge: payload.badge ?? "/icons/icon.svg",
+    data: payload.data ?? {},
+    actions: payload.actions ?? [],
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+  };
+
+  event.waitUntil(self.registration.showNotification(payload.title, options));
 });
 
 // Clicking a notification opens the app

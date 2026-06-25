@@ -5,6 +5,7 @@ import { Card } from "../components/ui/Card";
 import { LockOverlay } from "../components/ui/LockOverlay";
 import { useApp } from "../context/AppContext";
 import { gates } from "../lib/tierGates";
+import { calculatePosition } from "../lib/positionSizer";
 import { cn } from "../lib/cn";
 import { Calculator, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
 
@@ -18,14 +19,10 @@ export function SizerScreen() {
 
   const instrument = INSTRUMENTS.find((i) => i.symbol === symbol)!;
 
-  const calc = useMemo(() => {
-    const riskDollars = (accountSize * riskPct) / 100;
-    const stopCostPerContract = (stopPoints / instrument.tickSize) * instrument.tickValue;
-    const contracts = stopCostPerContract > 0 ? Math.floor(riskDollars / stopCostPerContract) : 0;
-    const maxLoss = contracts * stopCostPerContract;
-    const tp1Profit = contracts * stopCostPerContract * 1.5;
-    return { riskDollars, stopCostPerContract, contracts, maxLoss, tp1Profit };
-  }, [accountSize, riskPct, stopPoints, instrument]);
+  const calc = useMemo(
+    () => calculatePosition({ accountSize, riskPct, stopPoints, instrument }),
+    [accountSize, riskPct, stopPoints, instrument]
+  );
 
   return (
     <div className="relative space-y-4 pb-4">
