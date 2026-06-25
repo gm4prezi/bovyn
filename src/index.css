@@ -1,0 +1,224 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sat: env(safe-area-inset-top, 0px);
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    background-color: #040404;
+  }
+
+  body {
+    @apply bg-bg text-cream font-sans font-light antialiased;
+    font-feature-settings: "ss01", "cv11", "tnum";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  ::selection {
+    background: rgba(240, 160, 32, 0.35);
+    color: #F8F6F2;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(107, 122, 146, 0.3);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(240, 160, 32, 0.4);
+  }
+
+  /* Base typography */
+  h1, h2, h3, h4 {
+    @apply font-display;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  input, button, textarea {
+    font-family: inherit;
+  }
+
+  /* Kill 300ms tap delay on all interactive elements */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+
+  /* Prevent iOS Safari from zooming on input focus (requires ≥16px) */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: max(16px, 1em) !important;
+    }
+  }
+
+  /* Momentum scrolling + contain overscroll on all scroll containers */
+  .overflow-y-auto, .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+  .num {
+    @apply font-mono tabular-nums tracking-tight;
+  }
+
+  /* Surfaces */
+  .surface {
+    background: rgba(13, 18, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    @apply rounded-2xl;
+  }
+
+  .surface-raised {
+    background: rgba(18, 24, 33, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    @apply rounded-2xl;
+  }
+
+  .glass {
+    background: rgba(13, 18, 25, 0.55);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .glass-amber {
+    background: rgba(240, 160, 32, 0.06);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(240, 160, 32, 0.22);
+    box-shadow: 0 0 32px rgba(240, 160, 32, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .hairline {
+    @apply border-white/[0.07];
+  }
+
+  .divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .amber-rule {
+    height: 1px;
+    background: #F0A020;
+  }
+
+  .glow-line {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(240, 160, 32, 0.5) 50%,
+      transparent 100%
+    );
+  }
+
+  .text-gradient-amber {
+    background: linear-gradient(
+      135deg,
+      #F0A020 0%,
+      #FFD580 45%,
+      #F0A020 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-fog {
+    color: #6B7A92;
+  }
+
+  /* Editorial label */
+  .label {
+    @apply font-mono text-[10px] font-bold uppercase;
+    letter-spacing: 0.14em;
+    color: #6B7A92;
+  }
+
+  .label-amber {
+    @apply font-mono text-[10px] font-bold uppercase;
+    letter-spacing: 0.14em;
+    color: #F0A020;
+  }
+
+  /* Grid background for hero sections */
+  .grid-bg {
+    background-image: linear-gradient(
+        rgba(240, 160, 32, 0.05) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(240, 160, 32, 0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .aurora-bg {
+    position: relative;
+  }
+  .aurora-bg::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background: radial-gradient(
+        ellipse at 20% 20%,
+        rgba(240, 160, 32, 0.15) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse at 80% 60%,
+        rgba(240, 160, 32, 0.08) 0%,
+        transparent 55%
+      );
+    animation: aurora-drift 18s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .blur-lock {
+    filter: blur(6px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .ring-focus {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

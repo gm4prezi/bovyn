@@ -1,0 +1,86 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0
+// © BOVYN Capital — Locked Pivots Indicator
+//@version=5
+indicator("BOVYN Locked Pivots", shorttitle="BOVYN LP", overlay=true, max_lines_count=50, max_labels_count=50)
+
+// ─── Inputs ────────────────────────────────────────────────────────────────
+show_mgp   = input.bool(true,  "Show MGP  (Major Gap Point)")
+show_gp    = input.bool(true,  "Show GP   (Gap Point / Session Open)")
+show_uep   = input.bool(true,  "Show UEP  (Upper Extension Point)")
+show_lep   = input.bool(true,  "Show LEP  (Lower Extension Point)")
+show_poc   = input.bool(true,  "Show POC  (Point of Control)")
+show_nect  = input.bool(true,  "Show NECT (Next Expected Continuation Target)")
+atr_len    = input.int(14, "ATR Length", minval=5, maxval=50)
+ext_mult   = input.float(1.5, "Extension Multiplier (UEP/LEP)", minval=0.5, maxval=4.0, step=0.25)
+show_labels = input.bool(true, "Show Labels")
+extend_right = input.bool(true, "Extend Lines Right")
+
+// ─── Colors ────────────────────────────────────────────────────────────────
+c_mgp  = input.color(color.new(#FF6B6B, 0),  "MGP Color")
+c_gp   = input.color(color.new(#FFD700, 0),  "GP Color")
+c_uep  = input.color(color.new(#00E5FF, 0),  "UEP Color")
+c_lep  = input.color(color.new(#00E5FF, 0),  "LEP Color")
+c_poc  = input.color(color.new(#FF8C00, 0),  "POC Color")
+c_nect = input.color(color.new(#B44FE8, 0),  "NECT Color")
+
+// ─── Session detection ─────────────────────────────────────────────────────
+is_new_day = ta.change(time("D")) != 0
+
+// ─── Locked level vars (persist across bars) ──────────────────────────────
+var float mgp_val  = na   // Previous day close
+var float gp_val   = na   // Current day open (gap point)
+var float uep_val  = na   // Open + ATR * mult
+var float lep_val  = na   // Open - ATR * mult
+var float poc_val  = na   // Approximated via VWAP at session open
+var float nect_val = na   // Gap extension target
+
+// ─── Lock levels at session open ──────────────────────────────────────────
+if is_new_day
+    atr_val    = ta.atr(atr_len)[1]
+    prev_close = close[1]
+    curr_open  = open
+    gap_size   = curr_open - prev_close
+
+    mgp_val    := prev_close
+    gp_val     := curr_open
+    uep_val    := curr_open + atr_val * ext_mult
+    lep_val    := curr_open - atr_val * ext_mult
+    poc_val    := ta.vwap                          // VWAP at open as POC proxy
+    // NECT: gap projection — if gap up, target is open + gap; if gap down, open - |gap|
+    nect_val   := gap_size >= 0
+         ? curr_open + math.abs(gap_size) * 1.618
+         : curr_open - math.abs(gap_size) * 1.618
+
+// ─── Line style helper ────────────────────────────────────────────────────
+ext_style = extend_right ? extend.right : extend.none
+
+// ─── Draw lines ───────────────────────────────────────────────────────────
+// Use plot() for persistent horizontal levels — cleaner than line.new for locked pivots
+plot(show_mgp  and not na(mgp_val)  ? mgp_val  : na, "MGP",  color=c_mgp,  linewidth=1, style=plot.style_linebr)
+plot(show_gp   and not na(gp_val)   ? gp_val   : na, "GP",   color=c_gp,   linewidth=1, style=plot.style_linebr)
+plot(show_uep  and not na(uep_val)  ? uep_val  : na, "UEP",  color=c_uep,  linewidth=1, style=plot.style_linebr, linestyle=plot.style_circles)
+plot(show_lep  and not na(lep_val)  ? lep_val  : na, "LEP",  color=c_lep,  linewidth=1, style=plot.style_linebr, linestyle=plot.style_circles)
+plot(show_poc  and not na(poc_val)  ? poc_val  : na, "POC",  color=c_poc,  linewidth=2, style=plot.style_linebr)
+plot(show_nect and not na(nect_val) ? nect_val : na, "NECT", color=c_nect, linewidth=1, style=plot.style_linebr, linestyle=plot.style_stepline)
+
+// ─── Labels at right edge of each day ────────────────────────────────────
+if show_labels and is_new_day[1] == false and barstate.islast
+    label_x = bar_index + 3
+
+    if show_mgp and not na(mgp_val)
+        label.new(label_x, mgp_val,  " MGP "  + str.tostring(mgp_val,  "#.##"), color=color.new(c_mgp,  85), textcolor=c_mgp,  style=label.style_label_left, size=size.small)
+    if show_gp and not na(gp_val)
+        label.new(label_x, gp_val,   " GP "   + str.tostring(gp_val,   "#.##"), color=color.new(c_gp,   85), textcolor=c_gp,   style=label.style_label_left, size=size.small)
+    if show_uep and not na(uep_val)
+        label.new(label_x, uep_val,  " UEP "  + str.tostring(uep_val,  "#.##"), color=color.new(c_uep,  85), textcolor=c_uep,  style=label.style_label_left, size=size.small)
+    if show_lep and not na(lep_val)
+        label.new(label_x, lep_val,  " LEP "  + str.tostring(lep_val,  "#.##"), color=color.new(c_lep,  85), textcolor=c_lep,  style=label.style_label_left, size=size.small)
+    if show_poc and not na(poc_val)
+        label.new(label_x, poc_val,  " POC "  + str.tostring(poc_val,  "#.##"), color=color.new(c_poc,  85), textcolor=c_poc,  style=label.style_label_left, size=size.small)
+    if show_nect and not na(nect_val)
+        label.new(label_x, nect_val, " NECT " + str.tostring(nect_val, "#.##"), color=color.new(c_nect, 85), textcolor=c_nect, style=label.style_label_left, size=size.small)
+
+// ─── Background fill between UEP/LEP (value area) ────────────────────────
+uep_plot = plot(show_uep and not na(uep_val) ? uep_val : na, display=display.none)
+lep_plot = plot(show_lep and not na(lep_val) ? lep_val : na, display=display.none)
+fill(uep_plot, lep_plot, color=color.new(#00E5FF, 96), title="Extension Zone")
